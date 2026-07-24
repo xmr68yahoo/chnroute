@@ -1,0 +1,72 @@
+name: Build and upload RSC to Tencent COS
+
+on:
+  schedule:
+    # 21:00 UTC = 05:00 China Standard Time (next day)
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: chnroute-cos-upload
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build and validate rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          make
+          shopt -s nullglob
+          files=(./*.rsc)
+          if (( ${#files[@]} == 0 )); then
+            echo "No .rsc files were generated" >&2
+            exit 1
+          fi
+          printf 'Generated %s RSC files:\n' "${#files[@]}"
+          printf '  %s\n' "${files[@]}"
+
+      - name: Install COSCMD
+        run: python -m pip install --disable-pip-version-check --no-cache-dir coscmd
+
+      - name: Configure COSCMD
+        shell: bash
+        env:
+          COS_SECRET_ID: ${{ secrets.COS_SECRET_ID }}
+          COS_SECRET_KEY: ${{ secrets.COS_SECRET_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$COS_SECRET_ID"
+          test -n "$COS_SECRET_KEY"
+          coscmd config \
+            -a "$COS_SECRET_ID" \
+            -s "$COS_SECRET_KEY" \
+            -b "xmr-68-1257091414" \
+            -r "ap-chengdu"
+
+      - name: Upload RSC files
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(./*.rsc)
+          for file in "${files[@]}"; do
+            object="chnroute/${file#./}"
+            echo "Uploading ${file#./} to $object"
+            coscmd upload "$file" "$object"
+          done
