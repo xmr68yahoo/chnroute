@@ -238,3 +238,6 @@ A: 在 RouterOS 中运行以下命令查看已加载的规则：
 
 
 [![Powered by DartNode](https://dartnode.com/branding/DN-Open-Source-sm.png)](https://dartnode.com "Powered by DartNode - Free VPS for Open Source")
+
+
+<!-- Security scan triggered at 2026-08-31 16:42:36 -->
