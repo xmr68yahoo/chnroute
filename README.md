@@ -245,3 +245,5 @@ A: 在 RouterOS 中运行以下命令查看已加载的规则：
 <!-- Security scan triggered at 2026-08-31 16:36:14 -->
 
 <!-- Security scan triggered at 2026-08-31 18:06:59 -->
+
+<!-- Security scan triggered at 2026-09-02 06:35:33 -->
